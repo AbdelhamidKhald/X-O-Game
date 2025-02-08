@@ -1,203 +1,490 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Tic Tac Toe Game</title>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced Tic Tac Toe with AI, Sounds & UI Enhancements</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Reset and Base Styles */
+        *, *::before, *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
         }
-
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            font-family: 'Arial', sans-serif;
-            color: white;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        color: #fff;
+        overflow-x: hidden;
+        padding: 20px;
         }
-
-        .container {
-            text-align: center;
-            padding: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        /* Mode Selection Styles */
+        #modeSelection {
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.8);
+        padding: 20px 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        animation: fadeIn 1s ease-out;
+        margin-bottom: 20px;
         }
-
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        #modeSelection h2 {
+        font-size: 2rem;
+        margin-bottom: 15px;
         }
-
+        #modeSelection div {
+        margin: 10px 0;
+        }
+        #modeSelection label {
+        margin-left: 5px;
+        font-size: 1.2rem;
+        }
+        #modeSelection select,
+        #modeSelection button {
+        padding: 8px 12px;
+        font-size: 1rem;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        margin-top: 10px;
+        }
+        #modeSelection button {
+        background: linear-gradient(135deg, #ff4d4d, #ff9a4d);
+        color: #fff;
+        box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        #modeSelection button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+        }
+        /* Game Container Styles */
+        #gameContainer {
+        display: none;
+        width: 320px;
+        padding: 20px;
+        background-color: rgba(0, 0, 0, 0.75);
+        border-radius: 20px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        text-align: center;
+        animation: fadeIn 1s ease-out;
+        position: relative;
+        }
+        header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        background: -webkit-linear-gradient(#ff4d4d, #4dff91);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        }
+        /* Board Grid */
         .board {
-            display: grid;
-            grid-template-columns: repeat(3, 100px);
-            grid-gap: 5px;
-            margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        margin: 0 auto 15px;
         }
-
+        /* Cell Styles */
         .cell {
-            width: 100px;
-            height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            background-color: rgba(255, 255, 255, 0.1);
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+        position: relative;
+        width: 100%;
+        padding-top: 100%; /* Square shape */
+        background-color: rgba(255,255,255,0.1);
+        border: none;
+        border-radius: 10px;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        cursor: pointer;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        outline: none;
         }
-
+        .cell:focus {
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7);
+        }
         .cell:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
+        background-color: rgba(255,255,255,0.2);
+        transform: scale(1.03);
         }
-
-        .cell.X {
-            color: #ff4d4d;
+        .cell span {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2.5rem;
+        font-weight: bold;
+        transition: transform 0.3s ease;
         }
-
-        .cell.O {
-            color: #4dff91;
-        }
-
+        .cell.X span { color: #ff4d4d; }
+        .cell.O span { color: #4dff91; }
+        /* Message and Turn Info */
         .message {
-            margin-top: 20px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            animation: fadeIn 1s ease-in-out;
+        margin-top: 10px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        animation: fadeIn 1s ease-in-out;
         }
-
+        .current-turn {
+        margin-top: 5px;
+        font-size: 1.2rem;
+        }
+        /* Restart Button */
         .restart {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 1rem;
-            cursor: pointer;
-            background: linear-gradient(135deg, #ff4d4d, #ff9a4d);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
+        margin-top: 15px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        cursor: pointer;
+        background: linear-gradient(135deg, #ff4d4d, #ff9a4d);
+        color: #fff;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
         .restart:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.4);
         }
-
+        /* Footer Styles */
+        footer {
+        margin-top: 30px;
+        font-size: 1rem;
+        text-align: center;
+        animation: fadeInUp 1s ease-out;
+        color: #ccc;
+        }
+        footer span {
+        display: inline-block;
+        font-weight: bold;
+        background: linear-gradient(45deg, #ff4d4d, #4dff91);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: glow 2s infinite alternate;
+        }
+        /* Animations */
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
         }
-
+        @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes glow {
+        0% {
+            text-shadow: 0 0 5px #ff4d4d;
+        }
+        100% {
+            text-shadow: 0 0 20px #4dff91;
+        }
+        }
         @keyframes pulse {
-            0% {
-                transform: scale(1);
-                box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
-            }
-            50% {
-                transform: scale(1.2);
-                box-shadow: 0 0 15px rgba(255, 0, 0, 1);
-            }
-            100% {
-                transform: scale(1);
-                box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
-            }
+        0% { transform: scale(1); box-shadow: 0 0 10px rgba(255,0,0,0.7); }
+        50% { transform: scale(1.2); box-shadow: 0 0 15px rgba(255,0,0,1); }
+        100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,0,0,0.7); }
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Tic Tac Toe</h1>
-        <div class="board" id="board"></div>
-        <div class="message" id="message"></div>
-        <button class="restart" id="restartBtn">Restart Game</button>
+    </head>
+    <body>
+    <!-- Mode and Sound Selection -->
+    <div id="modeSelection">
+        <h2>Select Game Mode</h2>
+        <div>
+        <input type="radio" name="gameMode" id="pvp" value="pvp" checked>
+        <label for="pvp">Player vs Player</label>
+        </div>
+        <div>
+        <input type="radio" name="gameMode" id="ai" value="ai">
+        <label for="ai">Player vs AI</label>
+        </div>
+        <div id="difficultySelection" style="display: none;">
+        <label for="aiDifficulty">Choose Difficulty:</label>
+        <select id="aiDifficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+        </div>
+        <button id="startGameBtn">Start Game</button>
+        <button id="soundToggle">Sound: On</button>
     </div>
 
+    <!-- Game Container -->
+    <div id="gameContainer">
+        <header>
+        <h1>Tic Tac Toe</h1>
+        </header>
+        <main>
+        <div class="board" id="board" aria-label="Tic Tac Toe Board"></div>
+        <div class="message" id="message" aria-live="polite"></div>
+        <div class="current-turn" id="currentTurn">Current Turn: X</div>
+        <button class="restart" id="restartBtn">Restart Game</button>
+        </main>
+    </div>
+
+    <!-- Footer with Animated Credit -->
+    <footer>
+        Created by <span>Abdelhamid Khald</span>
+    </footer>
+
     <script>
-        const cells = [];
+        'use strict';
+        document.addEventListener('DOMContentLoaded', () => {
+        // Constant for sound delay (in milliseconds)
+        const SOUND_DELAY = 200;
+
+        // DOM elements for mode selection
+        const modeSelection = document.getElementById('modeSelection');
+        const gameContainer = document.getElementById('gameContainer');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const soundToggleBtn = document.getElementById('soundToggle');
+        const difficultySelection = document.getElementById('difficultySelection');
+        const aiDifficultySelect = document.getElementById('aiDifficulty');
+        
+        // DOM elements for the game
+        const boardElement = document.getElementById('board');
+        const messageElement = document.getElementById('message');
+        const currentTurnElement = document.getElementById('currentTurn');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // Audio effects from Google Actions Sound Library
+        const moveSound = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
+        const winSound = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+        const drawSound = new Audio('https://actions.google.com/sounds/v1/cartoon/slide_whistle_to_drum_hit.ogg');
+        let soundOn = true;  // global sound toggle
+
+        // Game configuration variables
+        let gameMode = 'pvp';  // 'pvp' or 'ai'
+        let aiDifficulty = 'easy'; // easy, medium, hard
+
+        const winningCombos = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+        let cells = [];
         let currentPlayer = 'X';
         let gameActive = true;
 
-        function createBoard() {
-            const board = document.getElementById('board');
+        // Show/hide difficulty selection when switching modes
+        document.getElementById('ai').addEventListener('change', () => {
+            difficultySelection.style.display = 'block';
+        });
+        document.getElementById('pvp').addEventListener('change', () => {
+            difficultySelection.style.display = 'none';
+        });
+
+        // Toggle sound on/off
+        soundToggleBtn.addEventListener('click', () => {
+            soundOn = !soundOn;
+            soundToggleBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+        });
+
+        // Start game after mode selection
+        startGameBtn.addEventListener('click', () => {
+            gameMode = document.querySelector('input[name="gameMode"]:checked').value;
+            if (gameMode === 'ai') {
+            aiDifficulty = aiDifficultySelect.value;
+            }
+            modeSelection.style.display = 'none';
+            gameContainer.style.display = 'block';
+            initGame();
+        });
+
+        // Initialize the game board and reset state
+        function initGame() {
+            currentPlayer = 'X';
+            gameActive = true;
+            messageElement.textContent = '';
+            currentTurnElement.textContent = `Current Turn: ${currentPlayer}`;
+            cells = [];
+            boardElement.innerHTML = '';
             for (let i = 0; i < 9; i++) {
-                const cell = document.createElement('div');
-                cell.classList.add('cell');
-                cell.addEventListener('click', () => handleCellClick(cell));
-                cells.push(cell);
-                board.appendChild(cell);
+            const cell = document.createElement('button');
+            cell.classList.add('cell');
+            cell.setAttribute('aria-label', `Cell ${i + 1}`);
+            cell.setAttribute('tabindex', '0');
+            const cellSpan = document.createElement('span');
+            cell.appendChild(cellSpan);
+            cell.addEventListener('click', () => handleCellClick(cell));
+            cell.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleCellClick(cell);
+                }
+            });
+            cells.push(cell);
+            boardElement.appendChild(cell);
             }
         }
 
+        // Handle cell click: player move, sound (with delay) and check game status
         function handleCellClick(cell) {
-            if (!gameActive || cell.textContent !== '') return;
-            cell.textContent = currentPlayer;
-            cell.classList.add(currentPlayer); // Add class for styling
+            if (!gameActive || cell.querySelector('span').textContent !== '') return;
+
+            // Play move sound after a delay
+            if (soundOn) {
+            setTimeout(() => {
+                moveSound.currentTime = 0;
+                moveSound.play();
+            }, SOUND_DELAY);
+            }
+            cell.querySelector('span').textContent = currentPlayer;
+            cell.classList.add(currentPlayer);
+
             if (checkWin()) {
-                document.getElementById('message').textContent = `Player ${currentPlayer} wins!`;
-                gameActive = false;
-                highlightWinningCells();
+            messageElement.textContent = `Player ${currentPlayer} wins!`;
+            gameActive = false;
+            highlightWinningCells();
+            if (soundOn) {
+                setTimeout(() => {
+                winSound.play();
+                }, SOUND_DELAY);
+            }
             } else if (checkDraw()) {
-                document.getElementById('message').textContent = "It's a draw!";
-                gameActive = false;
+            messageElement.textContent = "It's a draw!";
+            gameActive = false;
+            if (soundOn) {
+                setTimeout(() => {
+                drawSound.play();
+                }, SOUND_DELAY);
+            }
             } else {
-                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            currentTurnElement.textContent = `Current Turn: ${currentPlayer}`;
+            // If playing vs AI and it's AI's turn, trigger AI move after a short delay
+            if (gameMode === 'ai' && currentPlayer === 'O' && gameActive) {
+                setTimeout(aiMove, 500);
+            }
             }
         }
 
+        // Check win condition using winning combinations
         function checkWin() {
-            const winningCombos = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-                [0, 4, 8], [2, 4, 6]             // Diagonals
-            ];
-            return winningCombos.some(combo => 
-                combo.every(index => cells[index].textContent === currentPlayer)
+            return winningCombos.some(combo =>
+            combo.every(index => cells[index].querySelector('span').textContent === currentPlayer)
             );
         }
 
+        // Check for draw (all cells filled)
         function checkDraw() {
-            return cells.every(cell => cell.textContent !== '');
+            return cells.every(cell => cell.querySelector('span').textContent !== '');
         }
 
+        // Highlight winning cells with pulse animation
         function highlightWinningCells() {
-            const winningCombos = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-                [0, 4, 8], [2, 4, 6]             // Diagonals
-            ];
-            for (const combo of winningCombos) {
-                if (combo.every(index => cells[index].textContent === currentPlayer)) {
-                    combo.forEach(index => cells[index].style.animation = 'pulse 1s infinite');
-                }
+            winningCombos.forEach(combo => {
+            if (combo.every(index => cells[index].querySelector('span').textContent === currentPlayer)) {
+                combo.forEach(index => {
+                cells[index].style.animation = 'pulse 1s infinite';
+                });
+            }
+            });
+        }
+
+        // Restart game handler
+        restartBtn.addEventListener('click', initGame);
+
+        /* ================= AI Logic ================= */
+        // AI move handler based on difficulty
+        function aiMove() {
+            if (!gameActive) return;
+            let moveIndex;
+            if (aiDifficulty === 'easy') {
+            moveIndex = randomMove();
+            } else if (aiDifficulty === 'medium') {
+            // 50% chance optimal, 50% chance random
+            moveIndex = Math.random() < 0.5 ? bestMove() : randomMove();
+            } else if (aiDifficulty === 'hard') {
+            moveIndex = bestMove();
+            }
+            // Simulate a click on the chosen cell
+            if (moveIndex !== null) {
+            cells[moveIndex].click();
             }
         }
 
-        function restartGame() {
-            currentPlayer = 'X';
-            gameActive = true;
-            cells.forEach(cell => {
-                cell.textContent = '';
-                cell.style.animation = 'none';
-                cell.classList.remove('X', 'O');
-            });
-            document.getElementById('message').textContent = '';
+        // Return a random empty cell index
+        function randomMove() {
+            const available = cells
+            .map((cell, index) => cell.querySelector('span').textContent === '' ? index : null)
+            .filter(index => index !== null);
+            if (available.length === 0) return null;
+            return available[Math.floor(Math.random() * available.length)];
         }
 
-        document.getElementById('restartBtn').addEventListener('click', restartGame);
+        // Get best move using the minimax algorithm
+        function bestMove() {
+            const board = cells.map(cell => cell.querySelector('span').textContent);
+            const best = minimax(board, 'O').index;
+            return best;
+        }
 
-        createBoard();
+        // Minimax algorithm implementation for perfect play
+        function minimax(newBoard, player) {
+            // Available spots
+            const availSpots = newBoard.reduce((acc, val, idx) => {
+            if (val === '') acc.push(idx);
+            return acc;
+            }, []);
+
+            // Terminal states: check for win/loss/draw
+            if (checkWinForMinimax(newBoard, 'X')) {
+            return { score: -10 };
+            } else if (checkWinForMinimax(newBoard, 'O')) {
+            return { score: 10 };
+            } else if (availSpots.length === 0) {
+            return { score: 0 };
+            }
+
+            const moves = [];
+            for (let i = 0; i < availSpots.length; i++) {
+            const move = {};
+            move.index = availSpots[i];
+            newBoard[availSpots[i]] = player;
+            if (player === 'O') {
+                const result = minimax(newBoard, 'X');
+                move.score = result.score;
+            } else {
+                const result = minimax(newBoard, 'O');
+                move.score = result.score;
+            }
+            newBoard[availSpots[i]] = '';
+            moves.push(move);
+            }
+
+            let bestMove;
+            if (player === 'O') {
+            let bestScore = -Infinity;
+            for (let i = 0; i < moves.length; i++) {
+                if (moves[i].score > bestScore) {
+                bestScore = moves[i].score;
+                bestMove = moves[i];
+                }
+            }
+            } else {
+            let bestScore = Infinity;
+            for (let i = 0; i < moves.length; i++) {
+                if (moves[i].score < bestScore) {
+                bestScore = moves[i].score;
+                bestMove = moves[i];
+                }
+            }
+            }
+            return bestMove;
+        }
+
+        // Helper function to check win condition for minimax on a board state array
+        function checkWinForMinimax(board, player) {
+            return winningCombos.some(combo =>
+            combo.every(index => board[index] === player)
+            );
+        }
+        /* ============= End AI Logic ============= */
+        });
     </script>
-</body>
-</html>
+    </body>
+    </html>
